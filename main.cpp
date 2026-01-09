@@ -1,86 +1,59 @@
 /**
- Smart Student Progress Tracker (Final Submission)
+ Smart Student Progress Tracker (Real-Time Version)
  CS-110 (Introduction to Computer Programming)
- By:Armish Bibi
-    Mahum Akmal
-    Zainab Kamal
-    BESE-16A
- */
+ By: Armish Bibi, Mahum Akmal, Zainab Kamal
+ BESE-16A
+*/
 
-#include <iostream> //for input output handling
-#include <fstream>  // For File Handling
-#include <string>   // For string operations
-#include <iomanip>  // For formatting output 
-#include <cmath>    // For math functions
-#include <cstdio>   // For remove() function
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+#include <cmath>
+#include <ctime>
+#include <cstdio>
 
 using namespace std;
 
-// define global constants
-const int MAX_LOGS = 100; // study sessions limit
-const int MAX_TASKS = 10; // deadlines limit
+const int MAX_LOGS = 100;
+const int MAX_TASKS = 10;
 
-// Data structure for study sessions
+// Structure for study sessions
 struct Session {
     string subject;
     double hours;
-    int date;
+    time_t timestamp; // store actual datetime
 };
 
-// Study Schedule Manager using 2D Arrays
+// Structure for deadlines
+struct Deadline {
+    string taskName;
+    time_t dueDate;
+};
+
+// Study Schedule Manager (same as before)
 class ScheduleManager {
 private:
-    string timeTable[8][5];  // 8 Time Slots for 5 workdays Days
+    string timeTable[8][5];
 
 public:
     ScheduleManager() {
-        timeTable[0][0] = "Free Slot ";
-        timeTable[0][1] = "FOCP Lab  ";
-        timeTable[0][2] = "FOCP Thry ";
-        timeTable[0][3] = "FOCP Thry ";
-        timeTable[0][4] = "Calculus  ";
+        string slots[8][5] = {
+            {"Free Slot", "FOCP Lab", "FOCP Thry", "FOCP Thry", "Calculus"},
+            {"AoICT Lab", "FOCP Lab", "FOCP Thry", "Calculus", "AP Lab"},
+            {"AoICT Lab", "FOCP Lab", "Islamiat", "AoICT Thry", "AP Lab"},
+            {"AoICT Lab", "Calculus", "Islamiat", "AoICT Thry", "AP Lab"},
+            {"Lunch", "Lunch", "Lunch", "Lunch", "Lunch"},
+            {"Free Slot", "Quran-I", "ICoP", "Free Slot", "Free Slot"},
+            {"AP Thry", "Quran-I", "ICoP", "AP Thry", "Free Slot"},
+            {"Free Slot", "Quran-I", "Free Slot", "Free Slot", "Free Slot"}
+        };
 
-        timeTable[1][0] = "AoICT Lab ";
-        timeTable[1][1] = "FOCP Lab  ";
-        timeTable[1][2] = "FOCP Thry ";
-        timeTable[1][3] = "Calculus  ";
-        timeTable[1][4] = "AP Lab    ";
-
-        timeTable[2][0] = "AoICT Lab ";
-        timeTable[2][1] = "FOCP Lab  ";
-        timeTable[2][2] = "Islamiat  ";
-        timeTable[2][3] = "AoICT Thry";
-        timeTable[2][4] = "AP Lab    ";
-
-        timeTable[3][0] = "AoICT Lab ";
-        timeTable[3][1] = "Calculus  ";
-        timeTable[3][2] = "Islamiat  ";
-        timeTable[3][3] = "AoICT Thry";
-        timeTable[3][4] = "AP Lab    ";
-
-        timeTable[4][0] = "Lunch     ";
-        timeTable[4][1] = "Lunch     ";
-        timeTable[4][2] = "Lunch     ";
-        timeTable[4][3] = "Lunch     ";
-        timeTable[4][4] = "Lunch     ";
-
-        timeTable[5][0] = "Free Slot ";
-        timeTable[5][1] = "Quran-I   ";
-        timeTable[5][2] = "ICoP      ";
-        timeTable[5][3] = "Free Slot ";
-        timeTable[5][4] = "Free Slot ";
-
-        timeTable[6][0] = "AP Thry   ";
-        timeTable[6][1] = "Quran-I   ";
-        timeTable[6][2] = "ICoP      ";
-        timeTable[6][3] = "AP Thry   ";
-        timeTable[6][4] = "Free Slot ";
-
-        timeTable[7][0] = "Free Slot ";
-        timeTable[7][1] = "Quran-I   ";
-        timeTable[7][2] = "Free Slot ";
-        timeTable[7][3] = "Free Slot ";
-        timeTable[7][4] = "Free Slot ";
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 5; j++) {
+                timeTable[i][j] = slots[i][j];
+            }
+        }
     }
 
     void displaySchedule() {
@@ -89,29 +62,26 @@ public:
             "13:00-14:00", "14:00-14:50", "15:00-15:50", "16:00-16:50"
         };
 
-        cout << "\nx.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x"<<endl;
-        cout << "                                       TIMETABLE"<<endl;
-        cout << "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x"<<endl;
-        cout << "     TIME    |   MONDAY   |   TUESDAY  |  WEDNESDAY |   THURSDAY |    FRIDAY  |"<<endl;
-        cout << "__________________________________________________________________________________"<<endl;
+        cout << "\n==================== TIMETABLE ====================\n";
+        cout << "     TIME    |   MONDAY   |  TUESDAY  | WEDNESDAY | THURSDAY |  FRIDAY  |\n";
+        cout << "---------------------------------------------------------------\n";
 
-        for (int row = 0; row < 8; row++) {
-            cout << " " << times[row] << " |";
-            for (int col = 0; col < 5; col++) {
-                cout << " " << setw(9) << left << timeTable[row][col] << " |";
+        for (int i = 0; i < 8; i++) {
+            cout << " " << times[i] << " |";
+            for (int j = 0; j < 5; j++) {
+                cout << " " << setw(10) << left << timeTable[i][j] << " |";
             }
             cout << endl;
         }
 
-        cout << "______________________________________________________________________________________\n";
+        cout << "============================================================\n";
     }
 };
 
-// Deadline Manager using Arrays
+// Deadline Manager using real-time
 class DeadlineManager {
 private:
-    string taskNames[MAX_TASKS];
-    int dates[MAX_TASKS]; 
+    Deadline tasks[MAX_TASKS];
     int count;
 
 public:
@@ -121,126 +91,144 @@ public:
 
     void addDeadline() {
         if (count >= MAX_TASKS) {
-            cout << "\nTask list full! Delete old tasks first."<<endl;
+            cout << "Task list full! Delete old tasks first.\n";
             return;
         }
-        cout << "\n    ADD UPCOMING DEADLINE/EXAM    "<<endl;
-        cout << "Event Name : "; 
-        cin.ignore();
-        getline(cin, taskNames[count]);
 
-        cout << "Due Date (Day 1-31):  "; 
-        cin >> dates[count];
-        
+        cout << "\nEvent Name: ";
+        cin.ignore();
+        getline(cin, tasks[count].taskName);
+
+        int d, m, y;
+        cout << "Due Date (dd mm yyyy): ";
+        cin >> d >> m >> y;
+
+        tm due = {};
+        due.tm_mday = d;
+        due.tm_mon = m - 1;
+        due.tm_year = y - 1900;
+        due.tm_hour = 0;
+        due.tm_min = 0;
+        due.tm_sec = 0;
+
+        tasks[count].dueDate = mktime(&due);
         count++;
-        cout << ">> Successfully Added."<<endl;
+
+        cout << ">>> Deadline Added!\n";
     }
 
     void deleteDeadline() {
         if (count == 0) {
-            cout << "\nNo deadlines to delete."<<endl;
+            cout << "No deadlines to delete.\n";
             return;
         }
-        cout << "\n   CURRENT DEADLINES     "<<endl;
+
+        cout << "\nCurrent Deadlines:\n";
         for (int i = 0; i < count; i++) {
-            cout << " [" << i+1 << "] " << taskNames[i] << " (Due: " << dates[i] << ")\n";
+            tm *t = localtime(&tasks[i].dueDate);
+            cout << "[" << i + 1 << "] " << tasks[i].taskName 
+                 << " (Due: " << t->tm_mday << "/" << t->tm_mon + 1 
+                 << "/" << t->tm_year + 1900 << ")\n";
         }
+
         int choice;
-        cout << "Enter Number to Delete (0 to Cancel): ";
+        cout << "Enter number to delete (0 to cancel): ";
         cin >> choice;
 
-        if (choice < 1 || choice > count) return; 
-
-        int index = choice - 1;
-        for (int i = index; i < count - 1; i++) {
-            taskNames[i] = taskNames[i+1];
-            dates[i] = dates[i+1];
+        if (choice < 1 || choice > count) {
+            return;
         }
-        count--; 
+
+        for (int i = choice - 1; i < count - 1; i++) {
+            tasks[i] = tasks[i + 1];
+        }
+        count--;
+
         cout << ">>> Deadline deleted.\n";
-    }
-
-    void sortDeadlines() {
-        for (int i = 0; i < count - 1; i++) {
-            for (int j = 0; j < count - i - 1; j++) {
-                if (dates[j] > dates[j + 1]) {
-                    int tempDate = dates[j];
-                    dates[j] = dates[j + 1];
-                    dates[j + 1] = tempDate;
-
-                    string tempName = taskNames[j];
-                    taskNames[j] = taskNames[j + 1];
-                    taskNames[j + 1] = tempName;
-                }
-            }
-        }
     }
 
     void showCountdown() {
         if (count == 0) {
-            cout << "\n No upcoming deadlines. Relax! "<<endl;
+            cout << "No upcoming deadlines.\n";
             return;
         }
-        int currentDay;
-        cout << "\n    DEADLINE TRACKER     "<<endl;
-        cout << "Enter Today's Date (Day 1-31): ";
-        cin >> currentDay;
 
-        sortDeadlines(); 
+        time_t now = time(0);
 
-        cout << "\n_________________________________________________________________"<<endl;
-        cout << " EVENT NAME             | DUE DATE | DAYS LEFT | STATUS "<<endl;
-        cout << "-----------------------------------------------------------------\n";
+        cout << "\n================= DEADLINE TRACKER =================\n";
+        cout << " EVENT NAME           | DUE DATE  | DAYS LEFT | STATUS\n";
+        cout << "-----------------------------------------------------\n";
 
         for (int i = 0; i < count; i++) {
-            int daysLeft = dates[i] - currentDay;
+            int daysLeft = (int)difftime(tasks[i].dueDate, now) / (60 * 60 * 24);
+            tm *t = localtime(&tasks[i].dueDate);
 
-            cout << " " << left << setw(23) << taskNames[i] 
-                 << "| " << setw(8) << dates[i] 
-                 << "| " << setw(9) << daysLeft << " | ";
+            cout << setw(20) << left << tasks[i].taskName
+                 << "| " << t->tm_mday << "/" << t->tm_mon + 1 
+                 << "/" << t->tm_year + 1900
+                 << " | " << setw(9) << daysLeft << " | ";
 
-            if (daysLeft < 0) cout << "OVERDUE";
-            else if (daysLeft == 0) cout << "TODAY!";
-            else if (daysLeft <= 3) cout << "URGENT";
-            else cout << "Upcoming";
-
+            if (daysLeft < 0) {
+                cout << "OVERDUE";
+            } else if (daysLeft == 0) {
+                cout << "TODAY!";
+            } else if (daysLeft <= 3) {
+                cout << "URGENT";
+            } else {
+                cout << "Upcoming";
+            }
             cout << endl;
         }
-        cout << "=================================================================\n";
+
+        cout << "====================================================\n";
     }
 };
 
-// study Tracker Class
+// Study Tracker using real-time timestamps
 class StudyTracker {
 private:
-    Session logs[MAX_LOGS]; 
+    Session logs[MAX_LOGS];
     int count;
     string userFileName;
 
     int calculateTotalXP(int index) {
-        if (index < 0) return 0; 
+        if (index < 0) {
+            return 0;
+        }
+
         int currentXP = (int)(logs[index].hours * 100);
-        return currentXP + calculateTotalXP(index - 1); 
+        return currentXP + calculateTotalXP(index - 1);
     }
 
 public:
     StudyTracker(string username) {
         count = 0;
-        userFileName = username + ".txt"; 
+        userFileName = username + ".txt";
         loadData();
     }
 
     void loadData() {
         ifstream file(userFileName.c_str());
-        if (!file) return; 
-        
+        if (!file) {
+            return;
+        }
+
         count = 0;
         while (count < MAX_LOGS && getline(file, logs[count].subject)) {
-            if (logs[count].subject.empty()) continue; 
-            if (!(file >> logs[count].hours >> logs[count].date)) break;
+            if (logs[count].subject.empty()) {
+                continue;
+            }
+
+            long long ts;
+            if (!(file >> logs[count].hours >> ts)) {
+                break;
+            }
+
+            logs[count].timestamp = ts;
             file.ignore();
             count++;
         }
+
         file.close();
     }
 
@@ -248,207 +236,179 @@ public:
         ofstream file(userFileName.c_str());
         for (int i = 0; i < count; i++) {
             file << logs[i].subject << endl;
-            file << logs[i].hours << " " << logs[i].date << endl;
+            file << logs[i].hours << " " << logs[i].timestamp << endl;
         }
         file.close();
     }
 
-    void deleteSession() {
-        if (count == 0) {
-            cout << "\n No study sessions to delete.\n";
-            return;
-        }
-        cout << "\n    YOUR STUDY HISTORY "<<endl;
-        for (int i = 0; i < count; i++) {
-            cout << " [" << i+1 << "] " << left << setw(15) << logs[i].subject 
-                 << " (" << logs[i].hours << "h on Day " << logs[i].date << ")"<<endl;
-        }
-
-        int choice;
-        cout << "\nEnter Number to Delete (0 to Cancel): ";
-        cin >> choice;
-
-        if (choice < 1 || choice > count) return;
-
-        int index = choice - 1;
-        for (int i = index; i < count - 1; i++) {
-            logs[i] = logs[i+1];
-        }
-        count--; 
-        saveData(); 
-        cout << ">>> Session deleted successfully.\n";
-    }
-
-    bool deleteData() {
-        char confirm;
-        cout << "\n>> This will PERMANENTLY DELETE '" << userFileName << "' and LOG YOU OUT."<<endl;
-        cout << "Are you sure? (y/n): ";
-        cin >> confirm;
-
-        if (confirm == 'y' || confirm == 'Y') {
-            count = 0; 
-            if (remove(userFileName.c_str()) == 0)
-                cout << ">>> Successfully deleted user data file."<<endl;
-            else
-                cout << ">>> Memory cleared "<<endl;
-            return true; 
-        }
-        cout << ">>> Operation cancelled"<<endl;
-        return false;
-    }
-
     void logSession() {
         if (count >= MAX_LOGS) {
-            cout << "\n[ERROR] Memory Full! Delete Old Data."<<endl;
+            cout << "Memory Full! Delete old data.\n";
             return;
         }
-        cout << "\n    LOG NEW SESSION "<<endl;
-        cout << "Subject : "; 
+
+        cout << "\nSubject: ";
         cin.ignore();
         getline(cin, logs[count].subject);
 
-        cout << "Duration (Hours):  "; 
+        cout << "Duration (hours): ";
         while (!(cin >> logs[count].hours)) {
-            cin.clear(); cin.ignore(100, '\n');
+            cin.clear();
+            cin.ignore(100, '\n');
         }
 
-        cout << "Date (Day 1-31):   ";
-        while (!(cin >> logs[count].date)) {
-            cin.clear(); cin.ignore(100, '\n');
-        }
-
+        logs[count].timestamp = time(0);
         count++;
-        saveData(); 
-        cout << ">>> Session Saved to " << userFileName << endl;
+        saveData();
+
+        cout << ">>> Session logged!\n";
     }
 
     void showAnalytics() {
         if (count == 0) {
-            cout << "\n No data found. Please Log a Session first."<<endl;
+            cout << "No sessions logged.\n";
             return;
         }
-        cout << "\n======================================================"<<endl;
-        cout << "               STUDY PERFORMANCE GRAPH\n";
-        cout << "======================================================"<<endl;
-        
+
+        cout << "\n================ STUDY PERFORMANCE =================\n";
+
         for (int i = 0; i < count; i++) {
-            string name = logs[i].subject; 
-            if (name.length() > 12) name = name.substr(0, 9) + "...";
+            string name = logs[i].subject;
+            if (name.length() > 12) {
+                name = name.substr(0, 9) + "...";
+            }
 
-            cout << left << setw(13) << name 
-                 << " [Day " << setw(2) << logs[i].date << "]: ";
+            tm *t = localtime(&logs[i].timestamp);
 
-            int bars = (int)(logs[i].hours * 2); 
+            cout << left << setw(13) << name
+                 << " [" << t->tm_mday << "/" << t->tm_mon + 1 
+                 << "/" << t->tm_year + 1900 << "]: ";
+
+            int bars = (int)(logs[i].hours * 2);
             cout << "[";
-            for (int b = 0; b < bars; b++) cout << "|";
-            cout << "] (" << logs[i].hours << "h)"<<endl;
+            for (int b = 0; b < bars; b++) {
+                cout << "|";
+            }
+            cout << "] (" << logs[i].hours << "h)\n";
         }
-        cout << "_________________________________________________________________"<<endl;
+
+        cout << "====================================================\n";
     }
 
     void predictSyllabus() {
-        double totalLectures = 33.0; 
-        double completed, speed;
-        cout << "\n... SYLLABUS TRACKER ..."<<endl;
-        cout << "Lectures Completed:  "; cin >> completed;
-        cout << "Avg Speed (Lec/Day): "; cin >> speed;
+        double totalLectures = 33.0, completed, speed;
+
+        cout << "Lectures completed: ";
+        cin >> completed;
+
+        cout << "Avg speed (lec/day): ";
+        cin >> speed;
+
         if (speed <= 0) {
-            cout << "Speed must be positive!"<<endl;
+            cout << "Speed must be positive!\n";
             return;
         }
-        double remaining = totalLectures - completed;
-        double daysNeeded = remaining / speed;
 
-        cout << ">>> Est. Days to Finish: " << ceil(daysNeeded) << " days" << endl;
-        if (daysNeeded > 7) cout << "STATUS: Behind Schedule"<<endl;
-        else cout << "STATUS: On Track"<<endl;
+        double daysNeeded = (totalLectures - completed) / speed;
+
+        cout << "Est. days to finish: " << ceil(daysNeeded) << " days\n";
+        cout << "Status: " << (daysNeeded > 7 ? "Behind Schedule" : "On Track") << endl;
     }
 
     void showProfile() {
-        int totalXP = calculateTotalXP(count - 1); 
+        int totalXP = calculateTotalXP(count - 1);
         int level = (totalXP / 500) + 1;
 
-        cout << "\n======================================================"<<endl;
-        cout << "                   STUDENT PROFILE\n";
-        cout << "======================================================"<<endl;
-        cout << " TOTAL EXPERIENCE (XP): " << totalXP << endl;
-        cout << " CURRENT LEVEL:         " << level << endl;
+        cout << "\n================ STUDENT PROFILE =================\n";
+        cout << "TOTAL XP: " << totalXP << "\nCURRENT LEVEL: " << level << endl;
 
-        string rank = (level == 1) ? "Beginner" :
-                      (level <= 3) ? "Intermediate" : "Advanced Scholar";
-        cout << " ACADEMIC RANK:         " << rank << endl;
-        cout << "======================================================\n";
+        string rank = (level == 1) ? "Beginner" : (level <= 3) ? "Intermediate" : "Advanced Scholar";
+        cout << "ACADEMIC RANK: " << rank << "\n================================================\n";
     }
 };
 
-// Main Function
+// Main
 int main() {
-    bool appRunning = true; 
+    bool appRunning = true;
 
     while (appRunning) {
         system("cls");
 
         string username;
-        cout << "======================================================"<<endl;
-        cout << "           SMART STUDENT PROGRESS TRACKER\n";
-        cout << "======================================================"<<endl;
-        cout << "Enter User ID (or type 'exit' to close): ";
+        cout << "================ SMART STUDENT TRACKER ================\n";
+        cout << "Enter User ID (or type 'exit'): ";
         cin >> username;
 
-        if (username == "exit" || username == "EXIT") break;
+        if (username == "exit" || username == "EXIT") {
+            break;
+        }
 
         StudyTracker tracker(username);
         ScheduleManager scheduler;
         DeadlineManager deadlineMgr;
 
         bool loggedIn = true;
-        int choice;
 
         while (loggedIn) {
             system("cls");
 
-            cout << "======================================================"<<endl
-                 << "              DASHBOARD: " << username <<endl
-                 << "======================================================"<<endl
-                 << " [1] Log Study Session"<<endl
-                 << " [2] View Performance Graph"<<endl
-                 << " [3] Syllabus Predictor"<<endl
-                 << " [4] View Weekly Timetable"<<endl
-                 << " [5] My Profile & Rank"<<endl
-                 << " [6] Exam & Deadline Tracker"<<endl
-                 << " [7] Add New Deadline"<<endl     
-                 << " [8] Delete a Deadline"<<endl     
-                 << " [9] Delete a Study Session"<<endl
-                 << " [10] Delete My Account"<<endl
-                 << " [11] Logout"<<endl
-                 << " [12] Exit Application"<<endl
-                 << "======================================================"<<endl
-                 << " SELECT OPTION: ";
+            cout << "================ DASHBOARD: " << username << " ================\n";
+            cout << "[1] Log Study Session\n";
+            cout << "[2] View Performance\n";
+            cout << "[3] Syllabus Predictor\n";
+            cout << "[4] Weekly Timetable\n";
+            cout << "[5] My Profile\n";
+            cout << "[6] Deadline Tracker\n";
+            cout << "[7] Add Deadline\n";
+            cout << "[8] Delete Deadline\n";
+            cout << "[9] Logout\n";
+            cout << "[10] Exit App\n";
+            cout << "Select Option: ";
 
+            int choice;
             cin >> choice;
 
             switch (choice) {
-                case 1: tracker.logSession(); break;
-                case 2: tracker.showAnalytics(); break;
-                case 3: tracker.predictSyllabus(); break;
-                case 4: scheduler.displaySchedule(); break;
-                case 5: tracker.showProfile(); break;
-                case 6: deadlineMgr.showCountdown(); break;
-                case 7: deadlineMgr.addDeadline(); break;
-                case 8: deadlineMgr.deleteDeadline(); break;
-                case 9: tracker.deleteSession(); break;
-                case 10: if (tracker.deleteData()) 
-                            loggedIn = false; break;
-                case 11: loggedIn = false; break;
-                case 12: loggedIn = false; 
-                            appRunning = false; break;
-                default: cout << "Invalid Option."<<endl;
+                case 1:
+                    tracker.logSession();
+                    break;
+                case 2:
+                    tracker.showAnalytics();
+                    break;
+                case 3:
+                    tracker.predictSyllabus();
+                    break;
+                case 4:
+                    scheduler.displaySchedule();
+                    break;
+                case 5:
+                    tracker.showProfile();
+                    break;
+                case 6:
+                    deadlineMgr.showCountdown();
+                    break;
+                case 7:
+                    deadlineMgr.addDeadline();
+                    break;
+                case 8:
+                    deadlineMgr.deleteDeadline();
+                    break;
+                case 9:
+                    loggedIn = false;
+                    break;
+                case 10:
+                    loggedIn = false;
+                    appRunning = false;
+                    break;
+                default:
+                    cout << "Invalid Option.\n";
             }
-            cout << "\nPress Enter to continue...";
+
+            cout << "Press Enter to continue...";
             cin.ignore();
             cin.get();
         }
     }
+
     return 0;
 }
-//end of code  
